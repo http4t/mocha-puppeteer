@@ -78,7 +78,10 @@ async function run() {
         page.on("console", (message: any) => {
             (async () => {
                 const args = await Promise.all(message.args().map((a: any) => a.jsonValue()));
-                (console as any)[message.type()](...args);
+                const log = (console as any)[message.type()];
+                typeof log === 'function'
+                    ? log(...args)
+                    : console.log(...args);
             })();
         });
 
