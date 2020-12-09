@@ -18,30 +18,10 @@ Add to `package.json`:
 ```json
 {
   "scripts": {
-    "build": "tsc --build",
-    "test:browser": "puppet"
+    "test:browser": "mochapuppeteer"
   },
   "devDependencies": {
     "@http4t/mocha-puppeteer": "1.0.0"
   }
-}
-```
-
-## Adding to a module in http4t
-
-In addition to the dependency in `package.json`, you need to add a reference
-to `tsconfig.json`:
-
-```json
-{
-  "extends": "../../tsconfig-base.json",
-  "references": [
-    {
-      "path": "../src"
-    },
-    {
-      "path": "../../mocha-puppeteer/src"
-    }
-  ]
 }
 ```
