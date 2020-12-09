@@ -1,0 +1,16 @@
+**/.npmrc
+**/.idea/workspace.xml
+**/.idea/encodings.xml
+**/.idea/dictionaries
+**/node_modules
+**/*.log
+**/out
+**/dist
+**/*.js
+**/*.map
+**/*.d.ts
+.cache
+**/*.tsbuildinfo
+**/mocha.html
+*.iml
+.idea
