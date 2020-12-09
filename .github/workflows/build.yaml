@@ -14,9 +14,9 @@ jobs:
           node-version: 12
           registry-url: https://registry.npmjs.org/
       - name: install
-        run: yarn run install
+        run: yarn install
       - name: build
-        run: yarn build
+        run: yarn run build
       - name: version
         run: ./version.sh
       - name: publish
