@@ -14,3 +14,4 @@
 **/mocha.html
 *.iml
 .idea
+package.json.old
