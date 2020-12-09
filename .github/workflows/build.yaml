@@ -13,11 +13,6 @@ jobs:
         with:
           node-version: 12
           registry-url: https://registry.npmjs.org/
-      - name: generate build number
-        # Sets $BUILD_NUMBER, used in yarn run version
-        uses: einaregilsson/build-number@v2
-        with:
-          token: ${{ secrets.github_token }}
       - name: install
         run: yarn run install
       - name: build
