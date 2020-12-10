@@ -71,7 +71,7 @@ async function run() {
             }
         });
     });
-    const browser: Browser = await Puppeteer.launch.bind(Puppeteer)({headless: true});
+    const browser: Browser = await Puppeteer.launch.bind(Puppeteer)({headless: true, args: ['--no-sandbox']});
 
     try {
         const page = await browser.newPage();
