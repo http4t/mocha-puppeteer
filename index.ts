@@ -3,12 +3,13 @@
 import {Browser} from "puppeteer";
 
 const fs = require('fs');
+const path = require('path');
 const Puppeteer = require('puppeteer');
 const {spawn} = require('child_process');
 const {TextDecoder} = require('util');
 const decoder = new TextDecoder('utf-8')
 
-function files(dir: string | undefined = undefined): string[] {
+function files(dir: string): string[] {
     return fs.readdirSync(dir)
         .reduce(
             (acc: string[], f: string) => {
@@ -25,16 +26,34 @@ const testFiles = files(".")
         return f.endsWith("test.ts")
     });
 
+function findMocha(dir: string): string {
+    const packageFile = fs.statSync(`${dir}/package.json`);
+    if (packageFile.isFile()) {
+        const mochaDir = `${dir}/node_modules/mocha`;
+        if (fs.existsSync(mochaDir)) {
+            return mochaDir;
+        }
+        // Do not throw an error if using yarn workspaces- look for mocha in the root project
+        const pack = JSON.parse(fs.readFileSync(packageFile).toString('utf-8'));
+        if (pack.type !== "module")
+            throw new Error(`Expected to find mocha at ${mochaDir}`);
+    }
+    const parent = path.dirname(dir);
+    if (parent === ".")
+        throw new Error("Could not find ");
+    return findMocha(parent);
+}
+const mochaDir = findMocha(".")
 const html = `<!DOCTYPE html>
 <html>
 <head>
     <title>Mocha Tests</title>
     <meta charset="utf-8">
-    <link rel="stylesheet" href="../../../node_modules/mocha/mocha.css">
+    <link rel="stylesheet" href="${mochaDir}/mocha.css">
 </head>
 <body>
 <div id="mocha"></div>
-<script type="text/javascript" src="../../../node_modules/mocha/mocha.js"></script>
+<script type="text/javascript" src="${mochaDir}/mocha.js"></script>
 <script type="text/javascript">mocha.setup('bdd');</script>
 ${testFiles.map(f => `<script src="${f}"></script>`).join("\n")}
 </body>
