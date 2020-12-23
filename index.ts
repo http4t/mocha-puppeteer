@@ -26,7 +26,7 @@ const testFiles = files(".")
         return f.endsWith("test.ts")
     });
 
-function findMocha(dir: string): string {
+function findMocha(dir: string, log: string[] = []): string {
     const packageFile = `${dir}/package.json`;
     if (fs.statSync(packageFile).isFile()) {
         const mochaDir = `${dir}/node_modules/mocha`;
@@ -37,11 +37,15 @@ function findMocha(dir: string): string {
         const pack = JSON.parse(fs.readFileSync(packageFile).toString('utf-8'));
         if (pack.type !== "module")
             throw new Error(`Expected to find mocha at ${mochaDir}`);
+
+        log.push(`${dir}: no node_modules/mocha, but "type"="module", so continuing to search for root package.json`)
+    } else {
+        log.push(`${dir}: no package.json`)
     }
     const parent = path.dirname(dir);
     if (parent === ".")
-        throw new Error("Could not find ");
-    return findMocha(parent);
+        throw new Error(`Could not find node_modules/mocha: ${log.join("\n")}`);
+    return findMocha(parent, log);
 }
 
 const mochaDir = findMocha(".")
