@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 'use strict'
+import fs from "fs";
 import {Browser} from "puppeteer";
 
-const fs = require('fs');
 const path = require('path');
 const Puppeteer = require('puppeteer');
 const {spawn} = require('child_process');
@@ -27,8 +27,8 @@ const testFiles = files(".")
     });
 
 function findMocha(dir: string): string {
-    const packageFile = fs.statSync(`${dir}/package.json`);
-    if (packageFile.isFile()) {
+    const packageFile = `${dir}/package.json`;
+    if (fs.statSync(packageFile).isFile()) {
         const mochaDir = `${dir}/node_modules/mocha`;
         if (fs.existsSync(mochaDir)) {
             return mochaDir;
@@ -43,6 +43,7 @@ function findMocha(dir: string): string {
         throw new Error("Could not find ");
     return findMocha(parent);
 }
+
 const mochaDir = findMocha(".")
 const html = `<!DOCTYPE html>
 <html>
