@@ -1,4 +1,4 @@
-# http4t Mocha Puppeteer
+# http4t Muppeteer
 
 * Generates a `mocha.html` file that imports all `*.test.ts` files under the
   working directory
@@ -18,10 +18,10 @@ Add to `package.json`:
 ```json
 {
   "scripts": {
-    "test:browser": "mochapuppeteer"
+    "test:browser": "muppeteer"
   },
   "devDependencies": {
-    "@http4t/mocha-puppeteer": "1.0.0"
+    "@http4t/muppeteer": "1.0.0"
   }
 }
 ```

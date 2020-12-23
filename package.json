@@ -1,12 +1,12 @@
 {
-  "name": "@http4t/mocha-puppeteer",
+  "name": "@http4t/muppeteer",
   "version": "0.0.1",
   "license": "Apache-2.0",
   "scripts": {
     "build": "tsc --build; chmod +x index.js"
   },
   "bin": {
-    "mocha_puppeteer": "./index.js"
+    "muppeteer": "./index.js"
   },
   "dependencies": {
     "parcel-bundler": "^1.12.4",
