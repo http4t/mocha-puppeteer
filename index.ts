@@ -48,7 +48,7 @@ function findMocha(dir: string, log: string[] = []): string {
     return findMocha(parent, log);
 }
 
-const mochaDir = findMocha(__dirname)
+const mochaDir = path.relative(__dirname, findMocha(__dirname));
 const html = `<!DOCTYPE html>
 <html>
 <head>
