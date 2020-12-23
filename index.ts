@@ -1,10 +1,9 @@
 #!/usr/bin/env node
 'use strict'
 import fs from "fs";
-import {Browser} from "puppeteer";
+import * as path from "path";
+import Puppeteer, {Browser} from "puppeteer";
 
-const path = require('path');
-const Puppeteer = require('puppeteer');
 const {spawn} = require('child_process');
 const {TextDecoder} = require('util');
 const decoder = new TextDecoder('utf-8')
@@ -26,29 +25,7 @@ const testFiles = files(".")
         return f.endsWith("test.ts")
     });
 
-function findMocha(dir: string, log: string[] = []): string {
-    const packageFile = `${dir}/package.json`;
-    if (fs.statSync(packageFile).isFile()) {
-        const mochaDir = `${dir}/node_modules/mocha`;
-        if (fs.existsSync(mochaDir)) {
-            return mochaDir;
-        }
-        // Do not throw an error if using yarn workspaces- look for mocha in the root project
-        const pack = JSON.parse(fs.readFileSync(packageFile).toString('utf-8'));
-        if (pack.type !== "module")
-            throw new Error(`Expected to find mocha at ${mochaDir}`);
-
-        log.push(`${dir}: no node_modules/mocha, but "type"="module", so continuing to search for root package.json`)
-    } else {
-        log.push(`${dir}: no package.json`)
-    }
-    const parent = path.dirname(dir);
-    if (parent === ".")
-        throw new Error(`Could not find node_modules/mocha: ${log.join("\n")}`);
-    return findMocha(parent, log);
-}
-
-const mochaDir = path.relative(__dirname, findMocha(__dirname));
+const mochaDir = path.relative(process.cwd(), path.dirname(require.resolve('mocha')));
 const html = `<!DOCTYPE html>
 <html>
 <head>
