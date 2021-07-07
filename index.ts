@@ -52,6 +52,12 @@ if (importMocha.length !== 0) {
     throw new Error(`Importing 'describe' or 'it' from mocha in test files breaks browser testing in ${importMocha.join(", ")}`);
 }
 
+function getExtraOpts(): object {
+    if (!process.env.PUPPETEER_EXEC_PATH) return {};
+    console.log(`PUPPETEER_EXEC_PATH=${process.env.PUPPETEER_EXEC_PATH}`)
+    return {executablePath: process.env.PUPPETEER_EXEC_PATH};
+}
+
 async function run() {
     const parcel = spawn("parcel", ["serve", "mocha.html"]);
     parcel.stdout.pipe(process.stdout);
@@ -72,8 +78,7 @@ async function run() {
             }
         });
     });
-    // https://github.com/alexanderdavide/puppeteer-headful
-    const extraOpts = process.env.PUPPETEER_EXEC_PATH ? {executablePath: process.env.PUPPETEER_EXEC_PATH} : {};
+    const extraOpts = getExtraOpts();
     const browser: Browser = await Puppeteer.launch.bind(Puppeteer)(Object.assign(
         {
             headless: true,

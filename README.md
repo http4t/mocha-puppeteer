@@ -26,6 +26,24 @@ Add to `package.json`:
 }
 ```
 
+## Troubleshooting
+
+```
+Error: Failed to launch the browser process! spawn /Users/matt/dev/oss/http4t/node_modules/puppeteer/.local-chromium/mac-884014/chrome-mac/Chromium.app/Contents/MacOS/Chromium ENOENT
+```
+
+https://stackoverflow.com/a/63137427
+
+```
+brew install chromium
+export PUPPETEER_EXEC_PATH=$(which chromium)
+```
+
+Right click `Applications -> Chromium`, select open, confirm to MacOS that it's safe to run
+
+```
+yarn run test:browser
+```
 ## Running in github actions
 
 ```yaml
@@ -48,5 +66,5 @@ jobs:
         env:
           CI: 'true'
         with:
-          args: yarn run browser-test-using-muppeteer
+          args: yarn run test:browser
 ```
