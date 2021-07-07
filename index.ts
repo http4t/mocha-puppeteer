@@ -72,7 +72,14 @@ async function run() {
             }
         });
     });
-    const browser: Browser = await Puppeteer.launch.bind(Puppeteer)({headless: true, args: ['--no-sandbox']});
+    // https://github.com/alexanderdavide/puppeteer-headful
+    const extraOpts = process.env.PUPPETEER_EXEC_PATH ? {executablePath: process.env.PUPPETEER_EXEC_PATH} : {};
+    const browser: Browser = await Puppeteer.launch.bind(Puppeteer)(Object.assign(
+        {
+            headless: true,
+            args: ['--no-sandbox']
+        },
+        extraOpts));
 
     try {
         const page = await browser.newPage();
