@@ -25,3 +25,28 @@ Add to `package.json`:
   }
 }
 ```
+
+## Running in github actions
+
+```yaml
+name: Browser test
+jobs:
+  test-browser:
+    runs-on: ubuntu-latest
+    name: Browser test
+    steps:
+      - uses: actions/checkout@v1
+      - name: Setup node
+        uses: actions/setup-node@v1
+        with:
+          node-version: 15.x
+          registry-url: https://registry.npmjs.org/
+      - name: install
+        run: yarn install
+      - name: test
+        uses: mujo-code/puppeteer-headful@12.3.1
+        env:
+          CI: 'true'
+        with:
+          args: yarn run browser-test-using-muppeteer
+```
