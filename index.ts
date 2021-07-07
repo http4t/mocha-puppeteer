@@ -67,7 +67,7 @@ async function run() {
         })
         parcel.stdout.on('data', (data: Buffer) => {
             const text = decoder.decode(data)
-            if (text.startsWith("Server running at ")) {
+            if (text.includes("Server running at ")) {
                 resolve(null)
             }
         });
