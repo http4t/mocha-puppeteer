@@ -19,7 +19,8 @@
     "@types/node": "^17.0.0",
     "@types/puppeteer": "^5.4.6",
     "ts-node": "^10.8.0",
-    "typescript": "^4.7.0"
+    "typescript": "^4.7.0",
+    "yarn-audit-fix": "^9.3.9"
   },
   "resolutions": {
     "node-forge": "0.10.0"
