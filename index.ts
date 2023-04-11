@@ -129,7 +129,8 @@ async function run() {
         return acc + `import '${file.replace(/^.\//, "../").replace(/.ts$/, "")}';\n`;
     }, "")
     const indexInput = path.join(outdir, "index.ts");
-    mkdirSync(outdir)
+    if (!fs.existsSync(outdir))
+        mkdirSync(outdir);
     writeFileSync(indexInput, index);
     const indexOutput = path.join(outdir, "index.js");
     await time(
@@ -146,8 +147,6 @@ async function run() {
         readFileSync(mochaCss).toString("utf8"),
         readFileSync(mochaJs).toString("utf8"),
         readFileSync(indexOutput).toString("utf8"))
-
-    fs.rmdirSync(outdir, {recursive: true})
 
     const server = createServer((req, res) => {
         const s = new Readable();
