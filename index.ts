@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict'
-import fs, {readFileSync} from "fs";
+import fs, {mkdirSync, readFileSync, writeFileSync} from "fs";
 import * as path from "path";
 import Puppeteer, {Browser, BrowserConnectOptions, BrowserLaunchArgumentOptions, LaunchOptions, Page} from "puppeteer";
 import {build} from "esbuild"
@@ -124,18 +124,30 @@ async function time<T>(desc: string, p: Promise<T>): Promise<T> {
 }
 
 async function run() {
-    const outfile = ".muppeteer/tests.js";
+    const outdir = ".muppeteer";
+    const index = testFiles.reduce((acc, file) => {
+        return acc + `import '${file.replace(/^.\//, "../").replace(/.ts$/, "")}';\n`;
+    }, "")
+    const indexInput = path.join(outdir, "index.ts");
+    mkdirSync(outdir)
+    writeFileSync(indexInput, index);
+    const indexOutput = path.join(outdir, "index.js");
     await time(
         "Bundled test files",
-        build({bundle: true, entryPoints: testFiles, outfile: outfile})
+        build({
+            bundle: true,
+            entryPoints: [indexInput],
+            sourcemap: "inline",
+            outfile: indexOutput
+        })
     )
 
     const builtHtml = buildHtml(
         readFileSync(mochaCss).toString("utf8"),
         readFileSync(mochaJs).toString("utf8"),
-        readFileSync(outfile).toString("utf8"))
+        readFileSync(indexOutput).toString("utf8"))
 
-    fs.rmdirSync(path.dirname(outfile), {recursive:true})
+    fs.rmdirSync(outdir, {recursive: true})
 
     const server = createServer((req, res) => {
         const s = new Readable();
