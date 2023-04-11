@@ -4,7 +4,7 @@
   "license": "Apache-2.0",
   "scripts": {
     "build": "tsc --build; chmod +x index.js",
-    "test": "PUPPETEER_LOAD_TIMEOUT_MILLIS=60000 ts-node index.ts"
+    "test": "PUPPETEER_LOAD_TIMEOUT_MILLIS=60000 ts-node index.ts && PUPPETEER_LOAD_TIMEOUT_MILLIS=60000 ts-node index.ts"
   },
   "bin": {
     "muppeteer": "./index.js"
