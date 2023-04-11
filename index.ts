@@ -139,7 +139,8 @@ async function run() {
             bundle: true,
             entryPoints: [indexInput],
             sourcemap: "inline",
-            outfile: indexOutput
+            outfile: indexOutput,
+            target: "es2022"
         })
     )
 
