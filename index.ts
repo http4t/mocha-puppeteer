@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 'use strict'
-import fs from "fs";
+import fs, {readFileSync} from "fs";
 import * as path from "path";
 import Puppeteer, {Browser, BrowserConnectOptions, BrowserLaunchArgumentOptions, LaunchOptions, Page} from "puppeteer";
-import {ChildProcess} from "child_process";
+import {build} from "esbuild"
+import {createServer} from "http";
+import {Readable} from "stream";
 
-const {spawn} = require('child_process');
 const {TextDecoder} = require('util');
 const decoder = new TextDecoder('utf-8')
 
@@ -26,25 +27,32 @@ const testFiles = files(".")
         return f.endsWith("test.ts")
     });
 
-const mochaDir = path.relative(process.cwd(), path.dirname(require.resolve('mocha')));
-const html = `<!DOCTYPE html>
+const mochaJs = path.relative(process.cwd(), path.dirname(require.resolve('mocha')) + "/mocha.js");
+const mochaCss = path.relative(process.cwd(), path.dirname(require.resolve('mocha')) + "/mocha.css");
+
+const buildHtml = (mochaCss: string, mochaJs: string, js: string) => `<!DOCTYPE html>
 <html>
 <head>
     <title>Mocha Tests</title>
     <meta charset="utf-8">
-    <link rel="stylesheet" href="${mochaDir}/mocha.css">
+    <style>
+    ${mochaCss}
+    </style>
 </head>
 <body>
 <div id="mocha"></div>
-<script type="text/javascript" src="${mochaDir}/mocha.js"></script>
-<script type="text/javascript">mocha.setup('bdd');</script>
-${testFiles.map(f => `<script src="${f}"></script>`).join("\n")}
+<script type="text/javascript">
+    ${mochaJs}
+
+    mocha.setup('bdd');
+
+    ${js}
+</script>
 </body>
 </html>`
 
-const htmlFile = `${process.cwd()}/mocha.html`;
-fs.writeFileSync(htmlFile, html);
 console.log(testFiles);
+
 const importMocha = testFiles.filter(f => {
     const file = decoder.decode(fs.readFileSync(f));
     return /from\s+['"]mocha['"]/.test(file);
@@ -60,31 +68,15 @@ function getExtraOpts(): LaunchOptions & BrowserLaunchArgumentOptions & BrowserC
 }
 
 async function launchPuppeteerBrowser(extraOpts: object) {
-    return await Puppeteer.launch.bind(Puppeteer)(Object.assign(
-        {
-            headless: true,
-            args: ['--no-sandbox']
-        },
-        extraOpts));
-}
-
-function parcelServerRunning(parcel: ChildProcess) {
-    return new Promise((resolve, reject) => {
-        parcel.on("exit", (code: number | null) => {
-            if (code == 0) {
-                resolve(code);
-            } else {
-                reject(code);
-            }
-        })
-        // noinspection TypeScriptValidateTypes
-        parcel.stdout?.on("data", (chunk: any):void => {
-            const text = decoder.decode(chunk)
-            if (text.includes("Server running at ")) {
-                resolve(null)
-            }
-        });
-    });
+    return time(
+        "Launched Puppeteer",
+        Puppeteer.launch.bind(Puppeteer)(
+            {
+                headless: true,
+                args: ['--no-sandbox'],
+                ...extraOpts
+            })
+    );
 }
 
 function pipePageConsoleToProcConsole(page: Page) {
@@ -106,7 +98,7 @@ async function openPage(browser: Browser) {
 }
 
 async function runMochaTests(page: Page, parcelServerUrl: string) {
-    if(process.env.PUPPETEER_LOAD_TIMEOUT_MILLIS) console.log("Using PUPPETEER_LOAD_TIMEOUT_MILLIS="+process.env.PUPPETEER_LOAD_TIMEOUT_MILLIS)
+    if (process.env.PUPPETEER_LOAD_TIMEOUT_MILLIS) console.log("Using PUPPETEER_LOAD_TIMEOUT_MILLIS=" + process.env.PUPPETEER_LOAD_TIMEOUT_MILLIS)
     let puppeteerTimeout = process.env.PUPPETEER_LOAD_TIMEOUT_MILLIS ? parseInt(process.env.PUPPETEER_LOAD_TIMEOUT_MILLIS) : 20000;
 
     await page.goto(parcelServerUrl, {waitUntil: 'load', timeout: puppeteerTimeout});
@@ -123,25 +115,58 @@ async function runMochaTests(page: Page, parcelServerUrl: string) {
     });
 }
 
-async function run() {
-    const parcel = spawn("parcel", ["serve", "mocha.html"]);
-    parcel.stdout.pipe(process.stdout);
-    parcel.stderr.pipe(process.stderr);
+async function time<T>(desc: string, p: Promise<T>): Promise<T> {
+    const start = Date.now();
+    const result = await p;
+    console.log(`${desc} (${Date.now() - start}ms)`);
 
-    const parcelServerPromise = parcelServerRunning(parcel);
+    return result;
+}
+
+async function run() {
+    const outfile = ".muppeteer/tests.js";
+    await time(
+        "Bundled test files",
+        build({bundle: true, entryPoints: testFiles, outfile: outfile})
+    )
+
+    const builtHtml = buildHtml(
+        readFileSync(mochaCss).toString("utf8"),
+        readFileSync(mochaJs).toString("utf8"),
+        readFileSync(outfile).toString("utf8"))
+
+    fs.rmdirSync(path.dirname(outfile), {recursive:true})
+
+    const server = createServer((req, res) => {
+        const s = new Readable();
+        s._read = () => {
+        }; // redundant? see update below
+        s.push(builtHtml);
+        s.push(null);
+
+        res.writeHead(200, {"Content-Type": "text/html"})
+        s.pipe(res)
+    });
+    const serverStartPromise = new Promise<void>(resolve =>
+        server.listen(1234, () => {
+            resolve();
+        }))
+    ;
+
     const browser: Browser = await launchPuppeteerBrowser(getExtraOpts());
 
     try {
-        // We open page in puppeteer and have parcel compiling in parallel...
         const page = await openPage(browser);
 
-        // ...and then wait for parcel to catch up
-        await parcelServerPromise;
+        await serverStartPromise;
 
-        await runMochaTests(page, "http://localhost:1234");
+        await time(
+            "Ran tests",
+            runMochaTests(page, "http://localhost:1234")
+        );
     } finally {
         await browser.close();
-        parcel.kill();
+        await new Promise(resolve => server.close(resolve));
     }
 }
 
