@@ -16,3 +16,4 @@
 .idea
 package.json.old
 .parcel-cache
+.muppeteer
