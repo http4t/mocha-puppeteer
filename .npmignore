@@ -1,2 +1,6 @@
 .github
 version.sh
+.muppeteer
+**/*.test.ts
+**/*.test.js
+dist
